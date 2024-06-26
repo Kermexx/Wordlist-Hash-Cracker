@@ -1,64 +1,37 @@
-Vou explicar cada parte do código pq eu achei legal.
+### Descrição do Script Bash para Quebra de Hash
 
-O código é feito em bash script
+Este script em Bash é utilizado para encontrar uma senha correspondente a um hash específico, utilizando uma wordlist padrão do John the Ripper.
 
-Primeiro nós passamos as variáveis da wordlist que vamos usar e do hash que queremos quebrar>
+#### Funcionamento do Script:
 
-#!/bin/bash
+1. **Definição de Variáveis:**
+   - `wordlist="/usr/share/john/password.lst"`: Define o caminho para a wordlist que contém as senhas a serem testadas.
+   - `hash="806825f0827b628e81620f0d83922fb2c52c7136"`: Define o hash alvo que desejamos encontrar a senha correspondente.
 
-# Define a variável com o caminho para a wordlist
-wordlist="/usr/share/john/password.lst"
+2. **Loop de Leitura da Wordlist:**
+   - `while read senha; do`: Inicia um loop que lê cada senha da wordlist.
 
-# Define o hash que queremos quebrar
-hash="806825f0827b628e81620f0d83922fb2c52c7136"
+3. **Processamento de Hash:**
+   - `echo -e "Testando senha ====> $senha"`: Exibe a senha sendo testada.
+   - `hashx=$(echo -n "$senha" | md5sum | head -c 32 | base64 -w 0 | sha1sum | head -c 40)`: Calcula o hash da senha da seguinte maneira:
+     - `md5sum`: Calcula o hash MD5 da senha.
+     - `head -c 32`: Remove a quebra de linha adicionada pelo `md5sum`, capturando apenas os primeiros 32 caracteres do hash MD5.
+     - `base64 -w 0`: Codifica o hash MD5 resultante em Base64, sem quebras de linha.
+     - `sha1sum`: Calcula o hash SHA1 do resultado Base64.
+     - `head -c 40`: Remove a quebra de linha adicionada pelo `sha1sum`, capturando apenas os primeiros 40 caracteres do hash SHA1.
 
---------------
+4. **Comparação de Hash:**
+   - `if [ "$hash" == "$hashx" ]; then`: Verifica se o hash resultante (`$hashx`) corresponde ao hash alvo (`$hash`).
+     - Se correspondente, exibe a senha encontrada.
+     - Caso contrário, continua testando as próximas senhas na wordlist.
 
-Agora vamos fazer um loop e passar a wordlist que vai ficar dentro desse loop>
+5. **Finalização do Script:**
+   - `exit 0`: Encerra o script com status de sucesso se a senha for encontrada.
+   - `exit 1`: Encerra o script com status de falha se a senha não for encontrada após percorrer toda a wordlist.
 
-while read senha; do
-        ...(conteudo do loop aqui dentro)
-done < $wordlist
+#### Uso Recomendado:
 
-Basicamente estamos fazendo um loop onde cada linha dentro do arquivo "wordlist" é lido e colocado
-como "senha", então em resumo cada linha ele coloca o nome de senha. Estamos passando a wordlist
-ali no done < $wordlist para ser o loop que vai varrer dentro dessa wordlist
+- Este script é útil durante testes de penetração (`pentest`) para tentar quebrar hashes usando uma wordlist conhecida de senhas.
+- Pode ser adaptado modificando a variável `wordlist` para apontar para diferentes wordlists ou ajustando o hash alvo (`$hash`) para quebrar outros hashes específicos.
 
--------------
-
-Aqui é basico, só vai printar na tela que está testando a senha e falar a linha da wordlist que ele eestá>
-
-echo -e "Testando senha ====> $senha"
-
-Depois disso a gente vai transformar as senhas, em um contexto esse código foi criado pq no lab
-dizia que o hash que pegamos foi fruto de um script que passou a senha para um md5, desse md5
-passou para um base64 e desse base64 passou para um sha1. Então o que a gente está fazendo é
-exatamente isso, vamos pegar cada linha da nossa wordlist e tranformar a senha > md5 > base64 > sha1
-e depois de transformar a gente testa pra ver se tem alguma que bate, legal né?
-
-hashx=$(echo -n "$senha" | md5sum | head -c 32 | base64 -w 0 | sha1sum | head -c 40)
-    
-Então estamos colocando essa lógica na variável hashx. Esses "head -c 32, head -c 40 e -w 0" é
-só pra ele não considerar a quebra de linha que vai dar, então ele vai pegar exatamente o 
-tamanho do hash e não as quebras de linhas.
-
---------------
-
-Aqui a gente só printa o hash criado na tela
-
-echo "Hash encontrado ====> $hashx"
-
-Agora a gente vai fazer a comparação, vamos testar cada hash, a logica é simples:
-Se hash = hashx então fala que encontrou a senha e para o programa.
-
- if [ "$hash" == "$hashx" ]; then
-        echo "####################"
-        echo "[+] SENHA ENCONTRADA ====> $senha"
-        echo "####################"
-        exit 0  # Encerra o script com código de sucesso (0)
- fi
-
-
-E agora só confirma que fechou > 
-
-exit 1
+Esse script exemplifica um método básico de quebra de hash usando Bash, combinando vários comandos para manipular e comparar hashes de forma eficiente.
